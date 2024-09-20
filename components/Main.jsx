@@ -6,13 +6,18 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
   const paths = [
     { d: "M74 65H273.596L288 83.5263V109H85.3173L74 95.1053V65Z", text: "EXPERIENCE", imageSource: "nethermind_logo.png" },
     { d: "M74 112H273.596L288 130.526V156H85.3173L74 142.105V112Z", text: "PROJECTS", imageSource: "blue-wikipedia-logo.png" },
-    { d: "M74 159H273.596L288 177.526V203H85.3173L74 189.105V159Z", text: "SKILLS", imageSource: "Typescript_logo_2020.svg.png" },
-    { d: "M74 206H273.596L288 224.526V250H85.3173L74 236.105V206Z", text: "EDUCATION", imageSource: "southwestern-college.jpg" },
+    { d: "M74 159H273.596L288 177.526V203H85.3173L74 189.105V159Z", text: "SKILLS", imageSource: "coming-soon.jpg" },
+    { d: "M74 206H273.596L288 224.526V250H85.3173L74 236.105V206Z", text: "EDUCATION", imageSource: "coming-soon.jpg" },
     { d: "M74 253H273.596L288 271.526V297H85.3173L74 283.105V253Z", text: "LINKS", imageSource: "github-logo.png" },
-    { d: "M74 300H273.596L288 318.526V344H85.3173L74 330.105V300Z", text: "CONTACT", imageSource: "email-logo.png" },
+    { d: "M74 300H273.596L288 318.526V344H85.3173L74 330.105V300Z", text: "CONTACT", imageSource: "coming-soon.jpg" },
   ];
 
   const handleClick = (pathText, index) => {
+    if (index === 4) {
+      if (onPathClick) {
+        onPathClick(pathText)
+      }
+    }
     if (index > 1) return
     if (onPathClick) {
       onPathClick(pathText);  // Call the parent function with index and text

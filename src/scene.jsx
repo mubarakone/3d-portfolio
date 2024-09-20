@@ -7,6 +7,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import Main from '../components/Main';
 import Experience from '../components/Experience';
 import Projects from '../components/Projects'
+import Links from '../components/Links'
 
 const drawHexagon = (context, x, y, size) => {
   const height = size; // Normal height
@@ -223,6 +224,15 @@ function Scene() {
             <Projects onHoveredPath={pathHovered} onPathClick={pathClicked} />
           </Html>
         );
+
+      case 'LINKS':
+        targetPosition.current = [10.5, -0.6, 21.5];
+        camera.lookAt(11, 5, 5)
+        return (
+          <Html transform distanceFactor={1.2} position={[10.5, 0, 20]}> 
+            <Links onHoveredPath={pathHovered} onPathClick={pathClicked} />
+          </Html>
+        );
     }
   }
 
@@ -246,9 +256,11 @@ function Scene() {
       <BackgroundSphere position={[0, 0, 40]} />
       <BackgroundSphere position={[0, 0, 20]} /> {/* New BackgroundSphere */}
       <BackgroundSphere position={[-10, 0, 20]} /> {/* New BackgroundSphere */}
+      <BackgroundSphere position={[10, 0, 20]} /> {/* New BackgroundSphere */}
       <GlowingSphere  position={[0.32,0,39.5]} scale={0.13} offsetPosition={[0,0]} image={hoveredPath} />
       <GlowingSphere  position={[0,0.1,19.5]} scale={0.13} offsetPosition={[0.5,0.3]} image={hoveredPath} right={'-5px'} />
       <GlowingSphere  position={[-10,0.1,19.5]} scale={0.13} offsetPosition={[0.1,0.3]} image={hoveredPath} right={'0px'} />
+      <GlowingSphere  position={[10,0.1,19.5]} scale={0.13} offsetPosition={[0.1,0.3]} image={hoveredPath} right={'0px'} />
       {renderPath(handlePathClick, handleHoveredPath)}
       {/* <OrbitControls /> */}
     </>
