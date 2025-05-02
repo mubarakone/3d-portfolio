@@ -1,6 +1,5 @@
 "use client"
 import React from "react";
-import RiveButtons from "../components/RiveButtons"
 import Image from "next/image";
 import { Canvas } from '@react-three/fiber';
 import dynamic from 'next/dynamic';
@@ -14,7 +13,16 @@ export default function Home() {
     <Canvas 
       shadows
       style={{ height: '100vh', width: '100vw', position: 'absolute', }}
-      gl={{ alpha: false }}
+      gl={{ 
+        alpha: false,
+        antialias: false,
+        powerPreference: "high-performance",
+        stencil: false,
+        depth: true
+      }}
+      dpr={[1, 2]}
+      performance={{ min: 0.5 }}
+      frameloop="always"
       onCreated={({ gl, scene }) => {
         gl.setClearColor('black');
       }}
@@ -22,21 +30,6 @@ export default function Home() {
     >
       <Scene />
     </Canvas>
-    {/* <div style={{
-      display: "grid",
-      gridTemplateRows: "repeat(2, minmax(0, 1fr))",
-      gridAutoFlow: "column",
-      gap: "1rem",
-      position: "absolute",
-      zIndex: 1,
-    }}>
-      <div style={{gridRow: "span 3 / span 3",}}>
-        <Image width={500} height={500} src="FIRST NAME LAST NAME.svg" />
-      </div>
-      <div style={{gridRow: "span 2 / span 2",}}>
-        <RiveButtons />
-      </div>
-    </div> */}
   </div>
   );
 }
