@@ -124,11 +124,11 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
               }}
-              href='https://www.mubarakusmane.com/'
+              href='https://portfolio-liart-tau-23.vercel.app/'
               target="_blank"    // This makes the link open in a new tab
               rel="noopener noreferrer"  // Adds security
             >
-              https://www.mubarakusmane.com/
+              https://portfolio-liart-tau-23.vercel.app/
             </a>
           </>
           )
