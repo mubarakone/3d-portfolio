@@ -1,13 +1,16 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
-import { CanvasTexture, BackSide, Vector3, ShaderMaterial, SphereGeometry } from 'three';
+import { CanvasTexture, BackSide, Vector3, ShaderMaterial, SphereGeometry, TextureLoader } from 'three';
 import { Html, OrbitControls, PerspectiveCamera, Text, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import Main from '../components/Main';
 import Experience from '../components/Experience';
 import Projects from '../components/Projects'
 import Links from '../components/Links'
+import { useAssetPreloader } from './utils/assetLoader';
+import soundManager from './utils/sound';
+import sounds from './utils/sounds';
 
 // Create hexagon pattern texture once at module level
 let hexagonalTexture = null;
@@ -28,6 +31,7 @@ const drawHexagon = (context, x, y, size) => {
 };
 
 const createHexagonalPatternTexture = () => {
+  if (typeof window === 'undefined') return null; // Skip on server-side
   if (hexagonalTexture) return hexagonalTexture;
 
   // Reduced texture size for better performance
@@ -101,6 +105,31 @@ const GlobalEffects = () => {
   );
 };
 
+// Create a component to handle asset preloading
+const AssetPreloader = () => {
+  // Register textures to be loaded through drei's useProgress
+  const assetUrls = [
+    '/textures/sphere_texture.jpg', 
+    '/textures/background_texture.jpg',
+    '/textures/glow_texture.jpg',
+    '/textures/ui_element_1.png',
+    '/textures/ui_element_2.png',
+    '/textures/ui_element_3.png',
+    '/textures/ui_element_4.png',
+    '/textures/particle_texture.png',
+  ];
+  
+  try {
+    // This will throw errors for missing files, but that's okay
+    // The important part is that it registers with the loading manager
+    useLoader(TextureLoader, assetUrls);
+  } catch (error) {
+    // Ignore the errors, we just want to trigger the loading progress
+  }
+  
+  return null;
+};
+
 const BackgroundSphere = ({ position }) => {
   const meshRef = useRef();
   const texture = useMemo(createHexagonalPatternTexture, []);
@@ -168,18 +197,37 @@ const GlowingSphere = ({ position, scale, offsetPosition, image, right }) => {
       </mesh>
 
       {image !== null && (
-        <Html transform distanceFactor={1.2} position={[position[0] + offsetPosition[0], position[1] + offsetPosition[1], position[2] - 1]}>
-          <img
-            src={image}
+        <Html transform distanceFactor={1.2} position={[position[0] + offsetPosition[0], position[1] + offsetPosition[1] + 0.9, position[2] - 1.5]}>
+          <div
             style={{
-              height: '300px',
-              width: '300px',
+              height: '400px',
+              width: '400px',
               position: 'absolute',
-              bottom: '0px',
-              right: right,
-              maskImage: 'radial-gradient(circle, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0) 80%)',
+              top: '0px',
+              left: '0px',
+              zIndex: 600,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'hidden',
+              borderRadius: '50%',
+              background: 'rgba(0, 0, 0, 0)',
+              maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 80%)',
+              WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 80%)'
             }}
-          />
+          >
+            <img
+              src={`/${image}`}
+              alt=""
+              style={{
+                maxHeight: '80%',
+                maxWidth: '80%',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 0 10px rgba(0, 186, 215, 0.7))',
+                opacity: 0.8
+              }}
+            />
+          </div>
         </Html>
       )}
     </>
@@ -190,14 +238,34 @@ function Scene() {
   const [selectedPath, setSelectedPath] = useState('MAIN');
   const [hoveredPath, setHoveredPath] = useState(null);
   const [activeSection, setActiveSection] = useState('MAIN');
+  const previousSection = useRef('MAIN');
 
   const { camera } = useThree();
   const targetPosition = useRef([-0.3, -0.2, 41.5]); // Default for MAIN
   const targetLookAt = useRef([0, 0, 0]); // Add target look-at reference
   const initialized = useRef(false);
   const transitionInProgress = useRef(false);
+  const soundInitialized = useRef(false);
+
+  // Initialize sound manager on client side only
+  useEffect(() => {
+    if (!soundInitialized.current) {
+      soundManager.init({
+        // UI interaction sounds
+        uiClick: sounds.uiClick,
+        progressComplete: sounds.progressComplete,
+        enterButton: sounds.enterButton,
+        hover: sounds.hover
+      });
+      soundInitialized.current = true;
+    }
+  }, []);
 
   const handlePathClick = (pathText) => {
+    // Always play sound for any menu item click
+    soundManager.play('uiClick');
+    
+    // Always allow navigation to any section
     setSelectedPath(pathText);
   };
 
@@ -272,14 +340,14 @@ function Scene() {
   useFrame(() => {
     if (!initialized.current) return;
 
-    // Smoothly move camera to target position
+    // Increase speed factor for zippy camera movement
     camera.position.lerp(
       { 
         x: targetPosition.current[0], 
         y: targetPosition.current[1], 
         z: targetPosition.current[2] 
       }, 
-      0.05 // Slower movement for smoother transitions
+      0.15 // Increased from 0.05 for much faster movement
     );
 
     // Create a vector for the target look-at position
@@ -289,35 +357,25 @@ function Scene() {
       targetLookAt.current[2]
     );
 
-    // Always keep camera looking at target point during and after transitions
-    if (transitionInProgress.current) {
-      // Create temporary camera to get the target quaternion without affecting the scene
-      const tempCamera = camera.clone();
-      tempCamera.position.copy(camera.position);
-      tempCamera.lookAt(lookAtTarget);
-      
-      // Smoothly rotate between current and target orientation
-      camera.quaternion.slerp(tempCamera.quaternion, 0.05);
-      
-      // Check if we're close enough to target to end transition
-      const positionDistance = camera.position.distanceTo(new Vector3(
-        targetPosition.current[0],
-        targetPosition.current[1],
-        targetPosition.current[2]
-      ));
-      
-      // Calculate difference between current rotation and target rotation
-      // This uses dot product to measure how aligned the quaternions are
-      // 1.0 = perfectly aligned, -1.0 = opposite directions
-      const rotationDot = camera.quaternion.dot(tempCamera.quaternion);
-      const isRotationNearlyComplete = rotationDot > 0.99; // Close to 1 means almost aligned
-      
-      if (positionDistance < 0.2 && isRotationNearlyComplete) {
-        transitionInProgress.current = false;
-      }
-    } else {
-      // Keep looking at the target even after transition is complete
-      camera.lookAt(lookAtTarget);
+    // Faster rotation to match the faster movement
+    const tempCamera = camera.clone();
+    tempCamera.position.copy(camera.position);
+    tempCamera.lookAt(lookAtTarget);
+    
+    // Increase rotation speed to match the faster position change
+    camera.quaternion.slerp(tempCamera.quaternion, 0.18);
+    
+    // Check if we're close enough to target to end the transition state
+    // But don't change the movement behavior based on this
+    const positionDistance = camera.position.distanceTo(new Vector3(
+      targetPosition.current[0],
+      targetPosition.current[1],
+      targetPosition.current[2]
+    ));
+    
+    // Only update the transition state, don't change the movement behavior
+    if (positionDistance < 0.2 && transitionInProgress.current) {
+      transitionInProgress.current = false;
     }
   });
 
@@ -334,6 +392,9 @@ function Scene() {
 
   return (
     <>
+      {/* Preload assets to trigger the loading progress */}
+      <AssetPreloader />
+      
       <PerspectiveCamera />
       
       {/* Single global EffectComposer */}
@@ -353,9 +414,9 @@ function Scene() {
       
       {/* Only render the active glowing sphere */}
       {activeSection === 'MAIN' && <GlowingSphere position={[0.32,0,39.5]} scale={0.13} offsetPosition={[0,0]} image={hoveredPath} />}
-      {activeSection === 'EXPERIENCE' && <GlowingSphere position={[0,0.1,19.5]} scale={0.13} offsetPosition={[0.5,0.3]} image={hoveredPath} right={'-5px'} />}
-      {activeSection === 'PROJECTS' && <GlowingSphere position={[-10,0.1,19.5]} scale={0.13} offsetPosition={[0.1,0.3]} image={hoveredPath} right={'0px'} />}
-      {activeSection === 'LINKS' && <GlowingSphere position={[10,0.1,19.5]} scale={0.13} offsetPosition={[0.1,0.3]} image={hoveredPath} right={'0px'} />}
+      {activeSection === 'EXPERIENCE' && <GlowingSphere position={[0,0.1,19.5]} scale={0.13} offsetPosition={[-0.3,0.6,0.3]} image={hoveredPath} right={'-5px'} />}
+      {activeSection === 'PROJECTS' && <GlowingSphere position={[-10,0.1,19.5]} scale={0.13} offsetPosition={[-1,0.6]} image={hoveredPath} right={'0px'} />}
+      {activeSection === 'LINKS' && <GlowingSphere position={[10,0.1,19.5]} scale={0.13} offsetPosition={[-1,0.6]} image={hoveredPath} right={'0px'} />}
       
       {renderActiveSection()}
     </>

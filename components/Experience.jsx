@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import soundManager from '../src/utils/sound';
 
 export default function SVGComponent({ onPathClick, onHoveredPath }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -25,6 +26,12 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
 
   const handleHover = (index) => {
     if (lockHover) return
+    
+    // Only play hover sound when entering a menu item (not when leaving)
+    if (index !== null && hoveredIndex !== index) {
+      soundManager.play('hover');
+    }
+    
     setHoveredIndex(index)
     if (onHoveredPath) {
       if (index === null) {

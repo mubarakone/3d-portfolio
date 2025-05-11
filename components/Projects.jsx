@@ -1,14 +1,15 @@
 import React, { useState } from 'react'
+import soundManager from '../src/utils/sound';
 
 export default function SVGComponent({ onPathClick, onHoveredPath }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [lockHover, setLockHover] = useState(false)
 
   const paths = [
-    { d: "M533 122H333.404L319 103.474V78H521.683L533 91.8947V122Z", text: "PROJCET ONCHAIN WIKIPEDIA", imageSource: "blue-wikipedia-logo.png", image: "projectonchainwikipedia.PNG" },
+    { d: "M533 122H333.404L319 103.474V78H521.683L533 91.8947V122Z", text: "PROJECT ONCHAIN WIKIPEDIA", imageSource: "blue-wikipedia-logo.png", image: "projectonchainwikipedia.PNG" },
     { d: "M533 169H333.404L319 150.474V125H521.683L533 138.895V169Z", text: "NEWSPAPER.TIPS", imageSource: "news-4303.svg", image: "newspapertips.PNG" },
-    { d: "M533 216H333.404L319 197.474V172H521.683L533 185.895V216Z", text: "WEB3PLAYER-NEXT", imageSource: "web3player-next logo(2).PNG", image: "web3playernext.PNG" },
-    { d: "M533 263H333.404L319 244.474V219H521.683L533 232.895V263Z", text: "JUKEBOX", imageSource: "Instagram post - 1.png", image: "jukebox.PNG" },
+    { d: "M533 216H333.404L319 197.474V172H521.683L533 185.895V216Z", text: "CRAFTSMATCH (STEALTH MODE)", imageSource: "stealthmode.jpg", image: "craftsmatch.PNG" },
+    { d: "M533 263H333.404L319 244.474V219H521.683L533 232.895V263Z", text: "STORERUNNER (STEALTH MODE)", imageSource: "stealthmode.jpg", image: "storerunner.PNG" },
     { d: "M580.073 271.5H392.483L408.869 320.018L409 320.407V320.818V360.886C409 368.622 418.493 372.336 423.743 366.655L467.664 319.122L468.406 318.318H469.5H534.446L580.073 271.5Z", text: "MAIN", imageSource: "", bottomText: "BACK" },
   ];
 
@@ -25,6 +26,12 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
 
   const handleHover = (index) => {
     if (lockHover) return
+    
+    // Only play hover sound when entering a menu item (not when leaving)
+    if (index !== null && hoveredIndex !== index) {
+      soundManager.play('hover');
+    }
+    
     setHoveredIndex(index)
     if (onHoveredPath) {
       if (index === null) {
@@ -114,7 +121,7 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
                 wordWrap: 'break-word', // Ensures words break to fit the width if necessary
               }}
             >
-              A Web3 enabled video player that utilizes microtransactions for users to only pay for what they consume.
+              Skilled craftsmen from any part of the world can sell their work regardless of the financial infrastructure.
             </div>
             <img
               src={paths[hoveredIndex].image}
@@ -126,7 +133,7 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
                 right: '225px',
                 cursor: 'pointer',
               }}
-              onClick={() => window.open('https://web3player-next.vercel.app/', '_blank')}
+              onClick={() => window.open('https://craftsmatch.vercel.app/', '_blank')}
             />
           </>
         );
@@ -145,7 +152,7 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
                   wordWrap: 'break-word', // Ensures words break to fit the width if necessary
                 }}
               >
-                A Web3 enabled streaming service that utilizes microtransactions for payments. Uses web3player-next as its backend.
+                Order from your favorite ecommerce platforms directly onchain without having to move any funds.
               </div>
               <img
                 src={paths[hoveredIndex].image}
@@ -157,7 +164,7 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
                   right: '225px',
                   cursor: 'pointer',
                 }}
-                onClick={() => window.open('https://ethglobal.com/showcase/seceret-name-3gjhb', '_blank')}
+                onClick={() => window.open('https://intent-solver.vercel.app/', '_blank')}
               />
             </>
           )
@@ -248,7 +255,7 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
               right: '85px', // Adjust to align with SVG path
               color: hoveredIndex === index ? "#000000" : "#FFFFFF", // Change color on hover
               pointerEvents: 'none', // So the text doesn't interfere with the hover effect on the SVG
-              fontSize: index === 0 ? "13px" : '18px',
+              fontSize: index === 1 ? "18px" : '13px',
             }}
           >
             {path.text}

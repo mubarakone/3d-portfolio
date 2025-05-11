@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import soundManager from '../src/utils/sound';
 
 export default function SVGComponent({ onPathClick, onHoveredPath }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -6,10 +7,10 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
   const paths = [
     { d: "M74 65H273.596L288 83.5263V109H85.3173L74 95.1053V65Z", text: "EXPERIENCE", imageSource: "nethermind_logo.png" },
     { d: "M74 112H273.596L288 130.526V156H85.3173L74 142.105V112Z", text: "PROJECTS", imageSource: "blue-wikipedia-logo.png" },
-    { d: "M74 159H273.596L288 177.526V203H85.3173L74 189.105V159Z", text: "SKILLS", imageSource: "coming-soon.jpg" },
-    { d: "M74 206H273.596L288 224.526V250H85.3173L74 236.105V206Z", text: "EDUCATION", imageSource: "coming-soon.jpg" },
+    { d: "M74 159H273.596L288 177.526V203H85.3173L74 189.105V159Z", text: "SKILLS", imageSource: "under_construction.png" },
+    { d: "M74 206H273.596L288 224.526V250H85.3173L74 236.105V206Z", text: "EDUCATION", imageSource: "under_construction.png" },
     { d: "M74 253H273.596L288 271.526V297H85.3173L74 283.105V253Z", text: "LINKS", imageSource: "github-logo.png" },
-    { d: "M74 300H273.596L288 318.526V344H85.3173L74 330.105V300Z", text: "CONTACT", imageSource: "coming-soon.jpg" },
+    { d: "M74 300H273.596L288 318.526V344H85.3173L74 330.105V300Z", text: "CONTACT", imageSource: "under_construction.png" },
   ];
 
   const handleClick = (pathText, index) => {
@@ -25,6 +26,11 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
   };
 
   const handleHover = (index) => {
+    // Only play hover sound when entering a menu item (not when leaving)
+    if (index !== null && hoveredIndex !== index) {
+      soundManager.play('hover');
+    }
+    
     setHoveredIndex(index)
     if (onHoveredPath) {
       if (index === null) {
@@ -107,7 +113,7 @@ export default function SVGComponent({ onPathClick, onHoveredPath }) {
         style={{
           fontFamily: 'Genos, sans-serif',
           position: 'absolute',
-          top: '10px', // Adjust this to position it correctly (based on top red circle)
+          top: '3px', // Adjust this to position it correctly (based on top red circle)
           left: '100px', // Adjust this to position it correctly
           color: '#FFFFFF',
           fontSize: '40px',
